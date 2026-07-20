@@ -22,38 +22,28 @@ public class CollectorController {
 
     @PostMapping("/hubs")
     public void collectHub(@RequestBody HubEvent hubEvent) {
-        log.info("=== Received hub event ===");
-        log.info("Event: {}", hubEvent);
+        log.debug("Received hub event: {}", hubEvent);
 
         try {
-            log.debug("Starting hub event mapping to Avro...");
             var avroEvent = HubEventMapper.toAvro(hubEvent);
-            log.debug("Hub event mapped successfully to Avro");
-
-            log.info("Sending hub event to Kafka...");
             kafkaProducerService.sendHubEvent(avroEvent);
 
         } catch (Exception e) {
-            log.error("Error processing hub event: {}", hubEvent.toString(), e);
+            log.error("Error processing hub event: {}", hubEvent, e);
             throw e;
         }
     }
 
     @PostMapping("/sensors")
     public void collectSensor(@RequestBody SensorEvent sensorEvent) {
-        log.info("=== Received sensor event ===");
-        log.info("Event: {}", sensorEvent);
+        log.debug("Received sensor event: {}", sensorEvent);
 
         try {
-            log.debug("Starting sensor event mapping to Avro...");
             var avroEvent = SensorEventMapper.toAvro(sensorEvent);
-            log.debug("Sensor event mapped successfully to Avro");
-
-            log.info("Sending sensor event to Kafka...");
             kafkaProducerService.sendSensorEvent(avroEvent);
 
         } catch (Exception e) {
-            log.error("Error processing sensor event: {}", sensorEvent.toString(), e);
+            log.error("Error processing sensor event: {}", sensorEvent, e);
             throw e;
         }
     }
