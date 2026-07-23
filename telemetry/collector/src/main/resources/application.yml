@@ -2,12 +2,8 @@ spring:
   application:
     name: collector
   config:
-    import: "configserver:"
-  cloud:
+    import: configserver:http://localhost:8888
     config:
-      discovery:
-        enabled: true
-        service-id: config-server
       fail-fast: true
       retry:
         useRandomPolicy: true
@@ -17,5 +13,3 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
-    registerWithEureka: true
-    fetchRegistry: true
