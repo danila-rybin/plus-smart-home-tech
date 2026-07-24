@@ -10,7 +10,12 @@ import java.util.UUID;
 
 public interface ProductService {
 
-    Page<ProductDto> getProducts(ProductCategory category, Pageable pageable);
+    Page<ProductDto> getProducts(
+            ProductCategory category,
+            int page,
+            int size,
+            String[] sort
+    );
 
     ProductDto getProduct(UUID productId);
 

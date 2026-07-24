@@ -2,15 +2,17 @@ package ru.yandex.practicum.service;
 
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.yandex.practicum.exception.ProductNotFoundException;
-import ru.yandex.practicum.model.Product;
 import ru.yandex.practicum.dto.ProductCategory;
+import ru.yandex.practicum.dto.ProductDto;
 import ru.yandex.practicum.dto.ProductState;
 import ru.yandex.practicum.dto.SetProductQuantityStateRequest;
-import ru.yandex.practicum.dto.ProductDto;
+import ru.yandex.practicum.exception.ProductNotFoundException;
+import ru.yandex.practicum.model.Product;
 import ru.yandex.practicum.model.mapper.ProductMapper;
 import ru.yandex.practicum.repository.ProductRepository;
 
@@ -23,9 +25,24 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
 
     @Override
-    public Page<ProductDto> getProducts(ProductCategory category, Pageable pageable) {
+    public Page<ProductDto> getProducts(
+            ProductCategory category,
+            int page,
+            int size,
+            String[] sortParams) {
 
-        return productRepository.findByProductCategoryAndProductState(category, ProductState.ACTIVE, pageable)
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                parseSort(sortParams)
+        );
+
+        return productRepository
+                .findByProductCategoryAndProductState(
+                        category,
+                        ProductState.ACTIVE,
+                        pageable
+                )
                 .map(ProductMapper::toDto);
     }
 
@@ -34,10 +51,12 @@ public class ProductServiceImpl implements ProductService {
     public ProductDto getProduct(UUID productId) {
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + productId));
+                .orElseThrow(() -> new ProductNotFoundException(
+                        "Product not found with id: " + productId));
 
         if (product.getProductState() == ProductState.DEACTIVATE) {
-            throw new ProductNotFoundException("Product is deactivated: " + productId);
+            throw new ProductNotFoundException(
+                    "Product is deactivated: " + productId);
         }
 
         return ProductMapper.toDto(product);
@@ -47,7 +66,8 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public ProductDto createProduct(ProductDto productDto) {
 
-        Product product = productRepository.save(ProductMapper.toEntity(productDto));
+        Product product = productRepository.save(
+                ProductMapper.toEntity(productDto));
 
         return ProductMapper.toDto(product);
     }
@@ -55,8 +75,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public ProductDto updateProduct(ProductDto productDto) {
+
         Product product = productRepository.findById(productDto.getProductId())
-                .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + productDto.getProductId()));
+                .orElseThrow(() -> new ProductNotFoundException(
+                        "Product not found with id: " + productDto.getProductId()));
 
         ProductMapper.updateEntity(product, productDto);
 
@@ -70,7 +92,8 @@ public class ProductServiceImpl implements ProductService {
     public boolean removeProductFromStore(UUID productId) {
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + productId));
+                .orElseThrow(() -> new ProductNotFoundException(
+                        "Product not found with id: " + productId));
 
         product.setProductState(ProductState.DEACTIVATE);
         productRepository.save(product);
@@ -80,14 +103,38 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public boolean setProductQuantityState(SetProductQuantityStateRequest request) {
+    public boolean setProductQuantityState(
+            SetProductQuantityStateRequest request) {
 
         Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + request.getProductId()));
+                .orElseThrow(() -> new ProductNotFoundException(
+                        "Product not found with id: " + request.getProductId()));
 
         product.setQuantityState(request.getQuantityState());
         productRepository.save(product);
 
         return true;
+    }
+
+    private Sort parseSort(String[] sortParams) {
+        if (sortParams == null || sortParams.length == 0) {
+            return Sort.unsorted();
+        }
+
+        Sort sort = Sort.unsorted();
+
+        for (String param : sortParams) {
+            String[] parts = param.split(",");
+            String property = parts[0];
+
+            Sort.Direction direction = parts.length > 1
+                    && parts[1].equalsIgnoreCase("desc")
+                    ? Sort.Direction.DESC
+                    : Sort.Direction.ASC;
+
+            sort = sort.and(Sort.by(direction, property));
+        }
+
+        return sort;
     }
 }

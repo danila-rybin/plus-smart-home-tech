@@ -78,12 +78,15 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
             if (existingItem != null) {
                 existingItem.setQuantity(existingItem.getQuantity() + quantity);
                 cartItemRepository.save(existingItem);
-                log.debug("Updated quantity for product {}: new quantity = {}", productId, existingItem.getQuantity());
+                log.debug("Updated quantity for product {}: new quantity = {}",
+                        productId, existingItem.getQuantity());
             } else {
-                CartItem newItem = new CartItem();
-                newItem.setShoppingCart(cart);
-                newItem.setProductId(productId);
-                newItem.setQuantity(quantity);
+                CartItem newItem = CartItem.builder()
+                        .shoppingCart(cart)
+                        .productId(productId)
+                        .quantity(quantity)
+                        .build();
+
                 cartItemRepository.save(newItem);
                 log.debug("Added new product {} with quantity {}", productId, quantity);
             }
@@ -132,7 +135,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         ShoppingCartDto tempCart = buildTempCartForCheck(products);
 
         try {
-            ResponseEntity<BookedProductsDto> response = warehouseClient.checkProductQuantityEnoughForShoppingCart(tempCart);
+            warehouseClient.checkProductQuantityEnoughForShoppingCart(tempCart);
             log.debug("Warehouse check passed for product {} with quantity {}",
                     request.getProductId(), request.getNewQuantity());
         } catch (Exception e) {
