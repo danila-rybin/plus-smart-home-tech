@@ -4,6 +4,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -67,20 +70,20 @@ public class ProductController implements ShoppingStoreClient {
     }
 
     @PostMapping("/removeProductFromStore")
-    public ResponseEntity<Boolean> removeProductFromStore(
+    public ResponseEntity<ProductDto> removeProductFromStore(
             @RequestBody UUID productId) {
 
-        boolean result = productService.removeProductFromStore(productId);
+        ProductDto product = productService.removeProductFromStore(productId);
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(product);
     }
 
     @PostMapping("/quantityState")
-    public ResponseEntity<Boolean> setProductQuantityState(
+    public ResponseEntity<ProductDto> setProductQuantityState(
             @Valid @RequestBody SetProductQuantityStateRequest request) {
 
-        boolean result = productService.setProductQuantityState(request);
+        ProductDto product = productService.setProductQuantityState(request);
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(product);
     }
 }
