@@ -78,42 +78,46 @@ public class ProductServiceImpl implements ProductService {
 
         Product product = productRepository.findById(productDto.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException(
-                        "Product not found with id: " + productDto.getProductId()));
+                        "Product not found with id: "
+                                + productDto.getProductId()));
 
         ProductMapper.updateEntity(product, productDto);
 
-        Product productUpdate = productRepository.save(product);
+        Product updated = productRepository.save(product);
 
-        return ProductMapper.toDto(productUpdate);
+        return ProductMapper.toDto(updated);
     }
 
     @Override
     @Transactional
-    public boolean removeProductFromStore(UUID productId) {
+    public ProductDto removeProductFromStore(UUID productId) {
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(
                         "Product not found with id: " + productId));
 
         product.setProductState(ProductState.DEACTIVATE);
-        productRepository.save(product);
 
-        return true;
+        Product updated = productRepository.save(product);
+
+        return ProductMapper.toDto(updated);
     }
 
     @Override
     @Transactional
-    public boolean setProductQuantityState(
+    public ProductDto setProductQuantityState(
             SetProductQuantityStateRequest request) {
 
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ProductNotFoundException(
-                        "Product not found with id: " + request.getProductId()));
+                        "Product not found with id: "
+                                + request.getProductId()));
 
         product.setQuantityState(request.getQuantityState());
-        productRepository.save(product);
 
-        return true;
+        Product updated = productRepository.save(product);
+
+        return ProductMapper.toDto(updated);
     }
 
     private Sort parseSort(String[] sortParams) {
